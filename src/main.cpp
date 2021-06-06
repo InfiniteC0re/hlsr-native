@@ -33,6 +33,7 @@ struct SteamInfo
     // Steam Interfaces
     ISteamFriends *iSteamFriends;
     ISteamApps *iSteamApps;
+    ISteamUtils *iSteamUtils;
 
     // Functions
     void UpdateInterfaces()
@@ -41,6 +42,8 @@ struct SteamInfo
             steam.iSteamFriends = SteamFriends();
         if (steam.iSteamApps == (ISteamApps *)0x0)
             steam.iSteamApps = SteamApps();
+        if (steam.iSteamUtils == (ISteamUtils *)0x0)
+            steam.iSteamUtils = SteamUtils();
     }
 } steam;
 
@@ -228,6 +231,19 @@ Napi::String GetPersonaName(Napi::CallbackInfo &info)
     return Napi::String::New(env, steamFriends->GetPersonaName());
 }
 
+Napi::String GetIPCountry(Napi::CallbackInfo &info) 
+{
+    Env env = info.Env();
+
+    if (!steam.connected)
+        return Napi::String::New(env, "");
+    steam.UpdateInterfaces();
+
+    ISteamUtils *steamUtils = steam.iSteamUtils;
+
+    return Napi::String::New(env, steamUtils->GetIPCountry());
+}
+
 #pragma endregion
 
 // Initialization
@@ -241,6 +257,8 @@ Napi::Object Init(Napi::Env env, Napi::Object exports)
     Steamworks.Set("GetFriendByIndex", Napi::Function::New(env, GetFriendByIndex));
     Steamworks.Set("BIsSubscribedApp", Napi::Function::New(env, BIsSubscribedApp));
     Steamworks.Set("SetRichPresence", Napi::Function::New(env, SetRichPresence));
+    Steamworks.Set("GetPersonaName", Napi::Function::New(env, GetPersonaName));
+    Steamworks.Set("GetIPCountry", Napi::Function::New(env, GetIPCountry));
 
     exports.Set("steamworks", Steamworks);
 
