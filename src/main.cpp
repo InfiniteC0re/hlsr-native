@@ -190,14 +190,13 @@ Napi::Boolean SetRichPresence(Napi::CallbackInfo &info)
 {
     Env env = info.Env();
 
-    if (!steam.connected)
+    if (!steam.connected || info.Length() < 2)
         return Napi::Boolean::New(env, false);
     steam.UpdateInterfaces();
 
     ISteamFriends *steamFriends = steam.iSteamFriends;
 
-    // bool success = steamFriends->SetRichPresence("launcher", info[0].As<String>().Utf8Value().c_str());
-    bool success = steamFriends->SetRichPresence("launcher", "test");
+    bool success = steamFriends->SetRichPresence(info[0].As<String>().Utf8Value().c_str(), info[1].As<String>().Utf8Value().c_str());
 
     return Boolean::New(env, success);
 }
