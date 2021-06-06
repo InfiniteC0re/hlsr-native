@@ -215,6 +215,19 @@ Napi::Object GetFriendByIndex(Napi::CallbackInfo &info)
     return SteamFriend(env, id, false, index);
 }
 
+Napi::String GetPersonaName(Napi::CallbackInfo &info) 
+{
+    Env env = info.Env();
+
+    if (!steam.connected)
+        return Napi::String::New(env, "");
+    steam.UpdateInterfaces();
+
+    ISteamFriends *steamFriends = steam.iSteamFriends;
+
+    return Napi::String::New(env, steamFriends->GetPersonaName());
+}
+
 #pragma endregion
 
 // Initialization
