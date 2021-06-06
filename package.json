@@ -1,0 +1,15 @@
+{
+  "name": "main-module",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "node-addon-api": "^3.2.1"
+  },
+  "scripts": {
+    "clean": "node-gyp clean",
+    "configure": "node-gyp configure",
+    "build": "node-gyp build"
+  },
+  "gypfile": true
+}
