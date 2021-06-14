@@ -186,6 +186,29 @@ Napi::Array GetFriends(Napi::CallbackInfo &info)
     return friends;
 }
 
+Napi::Object NGetDiskFreeSpace(Napi::CallbackInfo &info)
+{
+    Env env = info.Env();
+
+    BOOL fResult;
+    __int64 lpFreeBytesAvailable, lpTotalNumberOfBytes, lpTotalNumberOfFreeBytes;
+
+    fResult = GetDiskFreeSpaceExA(info[0].As<String>().Utf8Value().c_str(), (PULARGE_INTEGER)&lpFreeBytesAvailable, (PULARGE_INTEGER)&lpTotalNumberOfBytes, (PULARGE_INTEGER)&lpTotalNumberOfFreeBytes);
+
+    Object retVal = Object::New(env);
+
+    retVal.Set("Result", fResult);
+
+    if (fResult)
+    {
+        retVal.Set("FreeBytesAvailable", lpFreeBytesAvailable / (1024 * 1024));
+        retVal.Set("TotalNumberOfBytes", lpTotalNumberOfBytes / (1024 * 1024));
+        retVal.Set("TotalNumberOfFreeBytes", lpTotalNumberOfFreeBytes / (1024 * 1024));
+    }
+
+    return retVal;
+}
+
 Napi::Boolean SetRichPresence(Napi::CallbackInfo &info)
 {
     Env env = info.Env();
@@ -217,7 +240,7 @@ Napi::Object GetFriendByIndex(Napi::CallbackInfo &info)
     return SteamFriend(env, id, false, index);
 }
 
-Napi::String GetPersonaName(Napi::CallbackInfo &info) 
+Napi::String GetPersonaName(Napi::CallbackInfo &info)
 {
     Env env = info.Env();
 
@@ -230,7 +253,7 @@ Napi::String GetPersonaName(Napi::CallbackInfo &info)
     return Napi::String::New(env, steamFriends->GetPersonaName());
 }
 
-Napi::String GetIPCountry(Napi::CallbackInfo &info) 
+Napi::String GetIPCountry(Napi::CallbackInfo &info)
 {
     Env env = info.Env();
 
@@ -260,6 +283,11 @@ Napi::Object Init(Napi::Env env, Napi::Object exports)
     Steamworks.Set("GetIPCountry", Napi::Function::New(env, GetIPCountry));
 
     exports.Set("steamworks", Steamworks);
+
+    Object WinApi = Object::New(env);
+    WinApi.Set("GetDiskFreeSpaceMbytes", Napi::Function::New(env, NGetDiskFreeSpace));
+
+    exports.Set("WinApi", WinApi);
 
     return exports;
 }

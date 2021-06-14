@@ -1,20 +1,22 @@
 const fs = require("fs");
 const HLSRNative = require("./build/Release/main.node");
 
-fs.writeFileSync("./steam_appid.txt", "250820");
+console.log(HLSRNative.WinApi.GetDiskFreeSpaceMbytes("D:/"))
 
-HLSRNative.steamworks.SteamAPI_Init();
-let hasHL1 = HLSRNative.steamworks.BIsSubscribedApp(70);
-let hasHL2 = HLSRNative.steamworks.BIsSubscribedApp(220);
+// fs.writeFileSync("./steam_appid.txt", "250820");
 
-let friends = HLSRNative.steamworks.GetFriends();
+// HLSRNative.steamworks.SteamAPI_Init();
+// let hasHL1 = HLSRNative.steamworks.BIsSubscribedApp(70);
+// let hasHL2 = HLSRNative.steamworks.BIsSubscribedApp(220);
 
-// friends.forEach((friend) => {
-//   if (friend.friendGameInfo) console.log(friend);
-// });
-console.log(HLSRNative.steamworks.SetRichPresence("hlsr"), hasHL1, hasHL2);
+// let friends = HLSRNative.steamworks.GetFriends();
 
-setTimeout(() => {
-  console.log(HLSRNative.steamworks.GetFriendByIndex(62));
-  while (true) {}
-}, 3000);
+// // friends.forEach((friend) => {
+// //   if (friend.friendGameInfo) console.log(friend);
+// // });
+// console.log(HLSRNative.steamworks.SetRichPresence("hlsr"), hasHL1, hasHL2);
+
+// setTimeout(() => {
+//   console.log(HLSRNative.steamworks.GetFriendByIndex(62));
+//   while (true) {}
+// }, 3000);
