@@ -2,7 +2,7 @@
   "targets": [
     {
       "target_name": "main",
-      "sources": [ "src/main.cpp" ],
+      "sources": [ "src/main.cpp", "src/LiveSplitReader.cpp", "src/include/pugixml.cpp" ],
       'defines': [ 'NAPI_DISABLE_CPP_EXCEPTIONS' ],
       "libraries": ["../src/libs/steam_api64.lib", "../src/libs/steam_api.lib"],
       'include_dirs': ["<!(node -p \"require('node-addon-api').include_dir\")", "../src/include"],

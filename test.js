@@ -1,8 +1,7 @@
 const fs = require("fs");
 const HLSRNative = require("./build/Release/main.node");
 
-console.log(HLSRNative.WinApi.GetDiskFreeSpaceMbytes("D:/"))
-
+let splits = HLSRNative.LiveSplit.ReadSplitsFile("C:/сплиты/splits2.lss");
 // fs.writeFileSync("./steam_appid.txt", "250820");
 
 // HLSRNative.steamworks.SteamAPI_Init();

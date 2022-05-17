@@ -4,23 +4,15 @@
 #include <iostream>
 #include <windows.h>
 #include "include/steam_api.h"
+#include "LiveSplitReader.h"
 
 using namespace Napi;
 
 #define fileWrite(file, value, size) file.write(reinterpret_cast<const char *>(&value), size);
 #define HLSRC_SECTION_DEF_SIZE 8
 
-// Utils Functions
-
-Number NodeNum(Env env, int num)
-{
-    return Number::New(env, num);
-}
-
-String NodeStr(Env env, const char *str)
-{
-    return String::New(env, str);
-}
+#define NODENUM(env, num) Number::New(env, num)
+#define NODESTR(env, str) String::New(env, (const char16_t*)str)
 
 #pragma region SteamWorks
 
@@ -31,18 +23,18 @@ struct SteamInfo
     int friendCount = 0;
 
     // Steam Interfaces
-    ISteamFriends *iSteamFriends;
-    ISteamApps *iSteamApps;
-    ISteamUtils *iSteamUtils;
+    ISteamFriends *iSteamFriends = nullptr;
+    ISteamApps *iSteamApps = nullptr;
+    ISteamUtils *iSteamUtils = nullptr;
 
     // Functions
     void UpdateInterfaces()
     {
-        if (steam.iSteamFriends == (ISteamFriends *)0x0)
+        if (steam.iSteamFriends == nullptr)
             steam.iSteamFriends = SteamFriends();
-        if (steam.iSteamApps == (ISteamApps *)0x0)
+        if (steam.iSteamApps == nullptr)
             steam.iSteamApps = SteamApps();
-        if (steam.iSteamUtils == (ISteamUtils *)0x0)
+        if (steam.iSteamUtils == nullptr)
             steam.iSteamUtils = SteamUtils();
     }
 } steam;
@@ -161,7 +153,7 @@ Napi::Number GetFriendCount(Napi::CallbackInfo &info)
 {
     Env env = info.Env();
 
-    return NodeNum(env, nGetFriendCount());
+    return NODENUM(env, nGetFriendCount());
 }
 
 Napi::Array GetFriends(Napi::CallbackInfo &info)
@@ -193,7 +185,7 @@ Napi::Object NGetDiskFreeSpace(Napi::CallbackInfo &info)
     BOOL fResult;
     __int64 lpFreeBytesAvailable, lpTotalNumberOfBytes, lpTotalNumberOfFreeBytes;
 
-    fResult = GetDiskFreeSpaceExA(info[0].As<String>().Utf8Value().c_str(), (PULARGE_INTEGER)&lpFreeBytesAvailable, (PULARGE_INTEGER)&lpTotalNumberOfBytes, (PULARGE_INTEGER)&lpTotalNumberOfFreeBytes);
+    fResult = GetDiskFreeSpaceExW((const wchar_t*)info[0].As<String>().Utf16Value().c_str(), (PULARGE_INTEGER)&lpFreeBytesAvailable, (PULARGE_INTEGER)&lpTotalNumberOfBytes, (PULARGE_INTEGER)&lpTotalNumberOfFreeBytes);
 
     Object retVal = Object::New(env);
 
@@ -206,6 +198,50 @@ Napi::Object NGetDiskFreeSpace(Napi::CallbackInfo &info)
         retVal.Set("TotalNumberOfFreeBytes", lpTotalNumberOfFreeBytes / (1024 * 1024));
     }
 
+    return retVal;
+}
+
+Napi::Object ReadSplitsFile(Napi::CallbackInfo &info)
+{
+    Env env = info.Env();
+    const wchar_t* path = (const wchar_t*)info[0].As<Napi::String>().Utf16Value().c_str();
+    LiveSplitReader reader(path);
+
+    Object retVal = Object::New(env);
+    
+    retVal.Set("parseStatus", (int)reader.m_result.status);
+    retVal.Set("liveSplitStatus", (int)reader.m_livesplitResult);
+	
+	if (reader.m_livesplitResult == LiveSplitFileStatus::OK)
+	{
+		Object splits = Object::New(env);
+		splits.Set("gameName", NODESTR(env, reader.m_splits.gameName));
+		splits.Set("categoryName", NODESTR(env, reader.m_splits.categoryName));
+		splits.Set("attemptCount", NODENUM(env, reader.m_splits.attemptCount));
+		splits.Set("segmentCount", reader.m_splits.segments.size());
+		
+		if (reader.m_livesplitResult != LiveSplitFileStatus::NO_SEGMENTS)
+		{
+			Array segments = Array::New(env, reader.m_splits.segments.size());
+			for (int i = 0; i < reader.m_splits.segments.size(); i++)
+			{
+				Object segment = Object::New(env);
+
+				segment.Set("name", NODESTR(env, reader.m_splits.segments[i]->name));
+				segment.Set("realTime", NODESTR(env, reader.m_splits.segments[i]->realTime));
+				segment.Set("gameTime", NODESTR(env, reader.m_splits.segments[i]->gameTime));
+				segment.Set("bestRealTime", NODESTR(env, reader.m_splits.segments[i]->bestRealTime));
+				segment.Set("bestGameTime", NODESTR(env, reader.m_splits.segments[i]->bestGameTime));
+				
+				segments.Set(i, segment);
+			}
+			
+			splits.Set("segments", segments);
+		}
+		
+		retVal.Set("splitsInfo", splits);
+	}
+    
     return retVal;
 }
 
@@ -236,7 +272,7 @@ Napi::Object GetFriendByIndex(Napi::CallbackInfo &info)
 
     int index = info[0].As<Number>().Int32Value();
     CSteamID id = steamFriends->GetFriendByIndex(index, k_EFriendFlagAll);
-    std::cout << steamFriends->GetFriendRichPresence(id, "launcher") << std::endl;
+
     return SteamFriend(env, id, false, index);
 }
 
@@ -288,6 +324,11 @@ Napi::Object Init(Napi::Env env, Napi::Object exports)
     WinApi.Set("GetDiskFreeSpaceMbytes", Napi::Function::New(env, NGetDiskFreeSpace));
 
     exports.Set("WinApi", WinApi);
+	
+	Object LiveSplit = Object::New(env);
+    LiveSplit.Set("ReadSplitsFile", Napi::Function::New(env, ReadSplitsFile));
+	
+    exports.Set("LiveSplit", LiveSplit);
 
     return exports;
 }
