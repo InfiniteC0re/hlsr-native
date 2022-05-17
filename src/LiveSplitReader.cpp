@@ -13,6 +13,7 @@ LiveSplitReader::LiveSplitReader(const wchar_t* path)
 		{
 			m_livesplitResult = LiveSplitFileStatus::OK;
 			m_splits.gameName = m_rootNode.child_value(L"GameName");
+			m_splits.attemptCount = m_rootNode.child(L"AttemptCount").text().as_int();
 			m_splits.categoryName = m_rootNode.child_value(L"CategoryName");
 
 			pugi::xml_node segmentsRoot = m_rootNode.child(L"Segments");
@@ -25,7 +26,7 @@ LiveSplitReader::LiveSplitReader(const wchar_t* path)
 				{
 					pugi::xml_node segmentNode = segments[i].node();
 					pugi::xml_node splitTimeNode = segmentNode.select_node(L"SplitTimes").node().select_node(L"SplitTime[@name='Personal Best']").node();
-					pugi::xml_node bestSegmentTimeNode = segmentNode.select_node(L"SplitTimes").node().select_node(L"SplitTime[@name='Personal Best']").node();
+					pugi::xml_node bestSegmentTimeNode = segmentNode.select_node(L"BestSegmentTime").node();
 					
 					SegmentInfo* pSegment = new SegmentInfo();
 					pSegment->name = segmentNode.child_value(L"Name");
