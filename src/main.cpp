@@ -193,9 +193,9 @@ Napi::Object NGetDiskFreeSpace(Napi::CallbackInfo &info)
 
     if (fResult)
     {
-        retVal.Set("FreeBytesAvailable", lpFreeBytesAvailable / (1024 * 1024));
-        retVal.Set("TotalNumberOfBytes", lpTotalNumberOfBytes / (1024 * 1024));
-        retVal.Set("TotalNumberOfFreeBytes", lpTotalNumberOfFreeBytes / (1024 * 1024));
+        retVal.Set("FreeMBytesAvailable", lpFreeBytesAvailable / 1048576);
+        retVal.Set("TotalNumberOfMBytes", lpTotalNumberOfBytes / 1048576);
+        retVal.Set("TotalNumberOfFreeMBytes", lpTotalNumberOfFreeBytes / 1048576);
     }
 
     return retVal;
